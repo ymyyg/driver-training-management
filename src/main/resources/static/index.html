@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>驾驶员培训管理系统</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --side: #111827;
+            --side-hover: #1f2937;
+            --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: var(--side);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 10;
+        }
+
+        .brand {
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 18px;
+            line-height: 1.4;
+        }
+
+        .brand p {
+            margin: 6px 0 0;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .nav {
+            padding: 16px 10px;
+            flex: 1;
+        }
+
+        .nav button {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: #d1d5db;
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .nav button:hover,
+        .nav button.active {
+            background: var(--side-hover);
+            color: #fff;
+        }
+
+        .main {
+            margin-left: 240px;
+            width: calc(100% - 240px);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            height: 68px;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 28px;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .topbar h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .topbar .hint {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .content {
+            padding: 24px 28px 36px;
+        }
+
+        .alert {
+            display: none;
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            border: 1px solid transparent;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert.success {
+            background: #ecfdf5;
+            border-color: #bbf7d0;
+            color: #166534;
+        }
+
+        .alert.error {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+
+        .alert.warn {
+            background: #fffbeb;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .card-body {
+            padding: 18px 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(140px, 1fr));
+            gap: 14px;
+        }
+
+        .stat {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            background: linear-gradient(180deg, #fff, #f8fafc);
+        }
+
+        .stat .num {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat .label {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .toolbar {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 14px;
+            outline: none;
+            background: #fff;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #111827;
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-danger {
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: #fecaca;
+        }
+
+        .btn-success {
+            background: #dcfce7;
+            color: var(--success);
+        }
+
+        .btn-warning {
+            background: #fef3c7;
+            color: var(--warning);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+            background: #fff;
+        }
+
+        th,
+        td {
+            border-bottom: 1px solid var(--border);
+            padding: 12px 12px;
+            text-align: left;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #f9fafb;
+            color: #374151;
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .empty {
+            text-align: center;
+            color: var(--muted);
+            padding: 28px;
+        }
+
+        .modal-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .45);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        .modal-mask.show {
+            display: flex;
+        }
+
+        .modal {
+            background: #fff;
+            width: min(760px, 100%);
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 18px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, .24);
+        }
+
+        .modal-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-weight: 800;
+            font-size: 18px;
+        }
+
+        .modal-body {
+            padding: 20px 22px;
+        }
+
+        .modal-footer {
+            padding: 16px 22px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .form-item label {
+            display: block;
+            font-size: 13px;
+            color: #374151;
+            margin-bottom: 7px;
+            font-weight: 600;
+        }
+
+        .form-item.full {
+            grid-column: 1 / -1;
+        }
+
+        .required {
+            color: var(--danger);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #dbeafe;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            vertical-align: -2px;
+            margin-right: 6px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 4px 9px;
+            font-size: 12px;
+            background: #eef2ff;
+            color: #3730a3;
+        }
+
+        .tag-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .tag-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .tag-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .small-note {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.7;
+            margin-top: 10px;
+        }
+
+        .login-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        @media (max-width: 980px) {
+            .sidebar {
+                width: 210px;
+            }
+
+            .main {
+                margin-left: 210px;
+                width: calc(100% - 210px);
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(140px, 1fr));
+            }
+
+            .toolbar {
+                grid-template-columns: repeat(2, minmax(160px, 1fr));
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <h1>驾驶员培训管理系统</h1>
+            <p>业务数据管理平台</p>
+        </div>
+        <nav class="nav" id="nav"></nav>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h2 id="pageTitle">系统总览</h2>
+                <div class="hint" id="pageHint">查看系统核心业务数据统计情况</div>
+            </div>
+            <div class="toolbar-actions">
+                <button class="btn btn-secondary" onclick="reloadCurrent()">刷新当前页</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="alert" class="alert"></div>
+            <section id="page"></section>
+        </div>
+    </main>
+</div>
+
+<div class="modal-mask" id="modalMask">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">新增</div>
+            <button class="btn btn-secondary" onclick="closeModal()">关闭</button>
+        </div>
+        <div class="modal-body">
+            <form id="editForm" class="form-grid"></form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" onclick="submitForm()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_PREFIX = "";
+
+    const modules = {
+        dashboard: {
+            label: "系统总览",
+            hint: "查看系统核心业务数据统计情况"
+        },
+
+        students: {
+            label: "学员管理",
+            hint: "维护学员基础资料及学习状态",
+            tableTitle: "学员信息列表",
+            description: "可对学员基础资料进行查询和维护，支持按姓名、学员编号及学习状态筛选。",
+            baseUrl: "/students",
+            searchUrl: "/students/search",
+            idKey: "id",
+            fields: [
+                { key: "studentId", label: "学员编号", type: "text", required: true, placeholder: "如 S001" },
+                { key: "name", label: "姓名", type: "text", required: true },
+                { key: "gender", label: "性别", type: "select", required: true, options: ["男", "女", "M", "F"] },
+                { key: "birthDate", label: "出生日期", type: "date" },
+                { key: "idCard", label: "身份证号", type: "text", required: true },
+                { key: "phone", label: "联系电话", type: "text" },
+                { key: "registerDate", label: "报名日期", type: "date" },
+                { key: "status", label: "学习状态", type: "select", options: ["学习中", "已完成", "暂停", "未开始"] }
+            ],
+            searchFields: [
+                { key: "name", label: "姓名", type: "text" },
+                { key: "studentId", label: "学员编号", type: "text" },
+                { key: "status", label: "学习状态", type: "select", options: ["学习中", "已完成", "暂停", "未开始"] }
+            ],
+            columns: [
+                { key: "studentId", label: "学员编号" },
+                { key: "name", label: "姓名" },
+                { key: "gender", label: "性别" },
+                { key: "birthDate", label: "出生日期" },
+                { key: "idCard", label: "身份证号" },
+                { key: "phone", label: "联系电话" },
+                { key: "registerDate", label: "报名日期" },
+                { key: "status", label: "学习状态" }
+            ]
+        },
+
+        drivers: {
+            label: "教练员管理",
+            hint: "维护教练员基础资料",
+            tableTitle: "教练员信息列表",
+            description: "可查看教练员基础信息，并按教练员编号、姓名、性别和身份证号进行筛选。",
+            baseUrl: "/drivers",
+            searchUrl: "/drivers/search",
+            idKey: "id",
+            fields: [
+                { key: "driverId", label: "教练员编号", type: "text", required: true, placeholder: "如 D001" },
+                { key: "name", label: "姓名", type: "text", required: true },
+                { key: "gender", label: "性别", type: "select", required: true, options: ["男", "女", "M", "F"] },
+                { key: "birthDate", label: "出生日期", type: "date" },
+                { key: "idCard", label: "身份证号", type: "text", required: true }
+            ],
+            searchFields: [
+                { key: "driverId", label: "教练员编号", type: "text" },
+                { key: "name", label: "姓名", type: "text" },
+                { key: "gender", label: "性别", type: "select", options: ["男", "女", "M", "F"] },
+                { key: "idCard", label: "身份证号", type: "text" }
+            ],
+            columns: [
+                { key: "driverId", label: "教练员编号" },
+                { key: "name", label: "姓名" },
+                { key: "gender", label: "性别" },
+                { key: "birthDate", label: "出生日期" },
+                { key: "idCard", label: "身份证号" }
+            ]
+        },
+
+        vehicles: {
+            label: "车辆管理",
+            hint: "维护培训车辆信息及使用状态",
+            tableTitle: "车辆信息列表",
+            description: "可维护车辆编号、车牌号、品牌型号、车辆状态及所属教练员信息。",
+            baseUrl: "/vehicles",
+            searchUrl: "/vehicles/search",
+            idKey: "id",
+            fields: [
+                { key: "vehicleId", label: "车辆编号", type: "text", required: true, placeholder: "如 V001" },
+                { key: "plateNumber", label: "车牌号", type: "text", required: true },
+                { key: "brand", label: "品牌", type: "text", required: true },
+                { key: "model", label: "型号", type: "text" },
+                { key: "status", label: "车辆状态", type: "select", options: ["可用", "使用中", "维修中", "Available", "In Use", "Under Maintenance"] },
+                { key: "driver", label: "所属教练员", type: "relation", relation: "drivers", display: "name" }
+            ],
+            searchFields: [
+                { key: "vehicleId", label: "车辆编号", type: "text" },
+                { key: "plateNumber", label: "车牌号", type: "text" },
+                { key: "brand", label: "品牌", type: "text" },
+                { key: "status", label: "车辆状态", type: "select", options: ["可用", "使用中", "维修中", "Available", "In Use", "Under Maintenance"] }
+            ],
+            columns: [
+                { key: "vehicleId", label: "车辆编号" },
+                { key: "plateNumber", label: "车牌号" },
+                { key: "brand", label: "品牌" },
+                { key: "model", label: "型号" },
+                { key: "status", label: "车辆状态" },
+                { key: "driver.name", label: "所属教练员" }
+            ]
+        },
+
+        records: {
+            label: "培训记录管理",
+            hint: "维护学员培训过程记录",
+            tableTitle: "培训记录列表",
+            description: "可记录培训日期、培训内容、培训时长、培训状态，并关联对应学员、教练员和车辆。",
+            baseUrl: "/training-records",
+            searchUrl: "/training-records/search",
+            idKey: "id",
+            fields: [
+                { key: "recordId", label: "培训记录编号", type: "text", required: true, placeholder: "如 R001" },
+                { key: "trainingDate", label: "培训日期", type: "date" },
+                { key: "trainingContent", label: "培训内容", type: "textarea" },
+                { key: "trainingHours", label: "培训时长", type: "number", step: "0.5" },
+                { key: "status", label: "培训状态", type: "select", options: ["进行中", "已完成", "未开始", "取消"] },
+                { key: "student", label: "学员", type: "relation", relation: "students", display: "name" },
+                { key: "driver", label: "教练员", type: "relation", relation: "drivers", display: "name" },
+                { key: "vehicle", label: "车辆", type: "relation", relation: "vehicles", display: "plateNumber" }
+            ],
+            searchFields: [
+                { key: "recordId", label: "培训记录编号", type: "text" },
+                { key: "trainingContent", label: "培训内容", type: "text" },
+                { key: "status", label: "培训状态", type: "select", options: ["进行中", "已完成", "未开始", "取消"] }
+            ],
+            columns: [
+                { key: "recordId", label: "记录编号" },
+                { key: "trainingDate", label: "培训日期" },
+                { key: "trainingContent", label: "培训内容" },
+                { key: "trainingHours", label: "培训时长" },
+                { key: "status", label: "培训状态" },
+                { key: "student.name", label: "学员" },
+                { key: "driver.name", label: "教练员" },
+                { key: "vehicle.plateNumber", label: "车辆" }
+            ]
+        },
+
+        users: {
+            label: "用户管理",
+            hint: "维护系统登录用户及账号状态",
+            tableTitle: "用户信息列表",
+            description: "可维护系统用户信息，并通过账号状态区分用户是否允许登录。",
+            baseUrl: "/users",
+            searchUrl: "/users/search",
+            idKey: "id",
+            fields: [
+                { key: "username", label: "用户名", type: "text", required: true },
+                { key: "password", label: "密码", type: "password", required: true },
+                { key: "realName", label: "真实姓名", type: "text" },
+                { key: "role", label: "角色", type: "select", required: true, options: ["管理员", "普通用户", "ADMIN", "USER"] },
+                { key: "status", label: "账号状态", type: "select", required: true, options: ["启用", "禁用"] }
+            ],
+            searchFields: [
+                { key: "username", label: "用户名", type: "text" },
+                { key: "role", label: "角色", type: "select", options: ["管理员", "普通用户", "ADMIN", "USER"] },
+                { key: "status", label: "账号状态", type: "select", options: ["启用", "禁用"] }
+            ],
+            columns: [
+                { key: "username", label: "用户名" },
+                { key: "realName", label: "真实姓名" },
+                { key: "role", label: "角色" },
+                { key: "status", label: "账号状态" }
+            ]
+        }
+    };
+
+    const state = {
+        current: "dashboard",
+        rows: {},
+        editingModule: null,
+        editingId: null,
+        relationCache: {}
+    };
+
+    function api(url) {
+        return API_PREFIX + url;
+    }
+
+    function showAlert(text, type = "success") {
+        const box = document.getElementById("alert");
+        box.className = `alert show ${type}`;
+        box.textContent = text;
+
+        window.clearTimeout(showAlert.timer);
+        showAlert.timer = window.setTimeout(() => {
+            box.className = "alert";
+        }, 3500);
+    }
+
+    function escapeHtml(value) {
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function getValue(obj, path) {
+        if (!obj || !path) {
+            return "";
+        }
+
+        return path.split(".").reduce((acc, key) => {
+            return acc == null ? "" : acc[key];
+        }, obj) ?? "";
+    }
+
+    function unwrap(json) {
+        if (json && typeof json === "object" && "data" in json) {
+            return json.data;
+        }
+
+        return json;
+    }
+
+    function resultMessage(json, fallback) {
+        if (json && typeof json === "object" && json.message) {
+            return json.message;
+        }
+
+        return fallback;
+    }
+
+    async function request(url, options = {}) {
+        const config = {
+            headers: {
+                "Content-Type": "application/json"
+            },
+            ...options
+        };
+
+        const res = await fetch(api(url), config);
+        const text = await res.text();
+
+        let json = null;
+        if (text) {
+            try {
+                json = JSON.parse(text);
+            } catch {
+                json = text;
+            }
+        }
+
+        if (!res.ok) {
+            throw new Error(typeof json === "object" && json?.message ? json.message : `接口请求失败：${res.status}`);
+        }
+
+        if (json && typeof json === "object" && json.success === false) {
+            throw new Error(json.message || "操作失败");
+        }
+
+        return json;
+    }
+
+    function initNav() {
+        const nav = document.getElementById("nav");
+        nav.innerHTML = "";
+
+        Object.entries(modules).forEach(([key, item]) => {
+            const btn = document.createElement("button");
+            btn.textContent = item.label;
+            btn.dataset.key = key;
+            btn.onclick = () => switchPage(key);
+
+            if (key === state.current) {
+                btn.classList.add("active");
+            }
+
+            nav.appendChild(btn);
+        });
+    }
+
+    function setActiveNav(key) {
+        document.querySelectorAll(".nav button").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.key === key);
+        });
+    }
+
+    function switchPage(key) {
+        state.current = key;
+        setActiveNav(key);
+
+        document.getElementById("pageTitle").textContent = modules[key].label;
+        document.getElementById("pageHint").textContent = modules[key].hint;
+
+        if (key === "dashboard") {
+            renderDashboard();
+        } else {
+            renderModule(key);
+        }
+    }
+
+    function reloadCurrent() {
+        switchPage(state.current);
+    }
+
+    async function renderDashboard() {
+        const page = document.getElementById("page");
+
+        page.innerHTML = `
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">系统数据总览</div>
+                    <button class="btn btn-primary" onclick="loadDashboardData()">重新统计</button>
+                </div>
+                <div class="card-body">
+                    <div class="stats-grid">
+                        <div class="stat">
+                            <div class="num" id="studentCount">-</div>
+                            <div class="label">学员数量</div>
+                        </div>
+                        <div class="stat">
+                            <div class="num" id="driverCount">-</div>
+                            <div class="label">教练员数量</div>
+                        </div>
+                        <div class="stat">
+                            <div class="num" id="vehicleCount">-</div>
+                            <div class="label">车辆数量</div>
+                        </div>
+                        <div class="stat">
+                            <div class="num" id="trainingRecordCount">-</div>
+                            <div class="label">培训记录数量</div>
+                        </div>
+                        <div class="stat">
+                            <div class="num" id="userCount">-</div>
+                            <div class="label">用户数量</div>
+                        </div>
+                    </div>
+                    <div class="small-note">系统总览用于展示当前业务数据规模，便于快速查看系统运行中的主要数据情况。</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">用户登录验证</div>
+                </div>
+                <div class="card-body">
+                    <div class="login-box">
+                        <div>
+                            <label>用户名</label>
+                            <input id="loginUsername" placeholder="请输入用户名">
+                        </div>
+                        <div>
+                            <label>密码</label>
+                            <input id="loginPassword" type="password" placeholder="请输入密码">
+                        </div>
+                        <button class="btn btn-primary" onclick="loginTest()">登录测试</button>
+                    </div>
+                    <div class="small-note">该区域用于验证账号登录功能，可区分启用账号和禁用账号的登录结果。</div>
+                </div>
+            </div>
+        `;
+
+        await loadDashboardData();
+    }
+
+    async function loadDashboardData() {
+        const statUrls = ["/stats/overview", "/statistics/overview", "/statistics", "/overview"];
+
+        try {
+            let data = null;
+
+            for (const url of statUrls) {
+                try {
+                    data = unwrap(await request(url));
+                    break;
+                } catch (_) {}
+            }
+
+            if (!data) {
+                data = await countByLists();
+            }
+
+            setCount("studentCount", data.studentCount);
+            setCount("driverCount", data.driverCount);
+            setCount("vehicleCount", data.vehicleCount);
+            setCount("trainingRecordCount", data.trainingRecordCount);
+            setCount("userCount", data.userCount);
+        } catch (e) {
+            showAlert("系统总览加载失败：" + e.message, "error");
+        }
+    }
+
+    function setCount(id, value) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.textContent = value ?? "-";
+        }
+    }
+
+    async function countByLists() {
+        const result = {};
+
+        const pairs = [
+            ["studentCount", "students"],
+            ["driverCount", "drivers"],
+            ["vehicleCount", "vehicles"],
+            ["trainingRecordCount", "records"],
+            ["userCount", "users"]
+        ];
+
+        for (const [countKey, moduleKey] of pairs) {
+            try {
+                const list = unwrap(await request(modules[moduleKey].baseUrl));
+                result[countKey] = Array.isArray(list) ? list.length : 0;
+            } catch (_) {
+                result[countKey] = "-";
+            }
+        }
+
+        return result;
+    }
+
+    async function loginTest() {
+        const username = document.getElementById("loginUsername").value.trim();
+        const password = document.getElementById("loginPassword").value.trim();
+
+        if (!username || !password) {
+            showAlert("请输入用户名和密码", "warn");
+            return;
+        }
+
+        try {
+            await request("/users/login", {
+                method: "POST",
+                body: JSON.stringify({ username, password })
+            });
+
+            showAlert("登录测试成功", "success");
+        } catch (e) {
+            showAlert("登录测试失败：" + e.message, "error");
+        }
+    }
+
+    function renderModule(key) {
+        const m = modules[key];
+        const page = document.getElementById("page");
+
+        page.innerHTML = `
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">${m.tableTitle || "数据列表"}</div>
+                        <div class="small-note">${m.description || "可进行数据列表展示、条件筛选、新增、修改和删除。"}</div>
+                    </div>
+                    <div class="toolbar-actions">
+                        <button class="btn btn-success" onclick="openModal('${key}')">新增</button>
+                        <button class="btn btn-secondary" onclick="loadList('${key}')">刷新</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="toolbar" id="searchBar"></div>
+                    <div class="toolbar-actions" style="justify-content:flex-start;margin-bottom:16px;">
+                        <button class="btn btn-primary" onclick="searchList('${key}')">查询</button>
+                        <button class="btn btn-secondary" onclick="resetSearch('${key}')">重置</button>
+                    </div>
+                    <div id="tableBox"></div>
+                </div>
+            </div>
+        `;
+
+        renderSearchBar(key);
+        loadList(key);
+    }
+
+    function renderSearchBar(key) {
+        const m = modules[key];
+        const bar = document.getElementById("searchBar");
+
+        bar.innerHTML = m.searchFields.map(f => renderSearchField(f)).join("");
+    }
+
+    function renderSearchField(f) {
+        if (f.type === "select") {
+            const options = ["", ...(f.options || [])].map(opt => {
+                const text = opt ? escapeHtml(opt) : `全部${escapeHtml(f.label)}`;
+                return `<option value="${escapeHtml(opt)}">${text}</option>`;
+            }).join("");
+
+            return `<select id="search_${f.key}">${options}</select>`;
+        }
+
+        if (f.type === "date") {
+            return `<input id="search_${f.key}" type="date" title="${escapeHtml(f.label)}" />`;
+        }
+
+        return `<input id="search_${f.key}" placeholder="${escapeHtml(f.label)}" />`;
+    }
+
+    function resetSearch(key) {
+        modules[key].searchFields.forEach(f => {
+            const el = document.getElementById(`search_${f.key}`);
+            if (el) {
+                el.value = "";
+            }
+        });
+
+        loadList(key);
+    }
+
+    async function loadList(key) {
+        const m = modules[key];
+        document.getElementById("tableBox").innerHTML = `<div class="empty"><span class="loading"></span>正在加载数据...</div>`;
+
+        try {
+            const list = unwrap(await request(m.baseUrl));
+            state.rows[key] = Array.isArray(list) ? list : [];
+            renderTable(key);
+        } catch (e) {
+            state.rows[key] = [];
+            renderTable(key);
+            showAlert(`${m.label}加载失败：${e.message}`, "error");
+        }
+    }
+
+    async function searchList(key) {
+        const m = modules[key];
+        const params = new URLSearchParams();
+
+        m.searchFields.forEach(f => {
+            const value = document.getElementById(`search_${f.key}`).value.trim();
+
+            if (value) {
+                params.append(f.key, value);
+            }
+        });
+
+        if ([...params.keys()].length === 0) {
+            await loadList(key);
+            return;
+        }
+
+        document.getElementById("tableBox").innerHTML = `<div class="empty"><span class="loading"></span>正在查询数据...</div>`;
+
+        try {
+            const list = unwrap(await request(`${m.searchUrl}?${params.toString()}`));
+            state.rows[key] = Array.isArray(list) ? list : [];
+            renderTable(key);
+
+            if (!state.rows[key].length) {
+                showAlert("未查询到相关数据", "warn");
+            }
+        } catch (e) {
+            showAlert(`条件查询失败：${e.message}`, "error");
+            renderTable(key);
+        }
+    }
+
+    function renderTable(key) {
+        const m = modules[key];
+        const rows = state.rows[key] || [];
+        const box = document.getElementById("tableBox");
+
+        if (!rows.length) {
+            box.innerHTML = `<div class="table-wrap"><div class="empty">暂无数据</div></div>`;
+            return;
+        }
+
+        const head = m.columns.map(c => `<th>${c.label}</th>`).join("") + `<th style="width:150px;">操作</th>`;
+
+        const body = rows.map((row, index) => `
+            <tr>
+                ${m.columns.map(c => `<td>${renderCell(getValue(row, c.key), c.key)}</td>`).join("")}
+                <td>
+                    <div class="row-actions">
+                        <button class="btn btn-warning" onclick="openModal('${key}', ${index})">修改</button>
+                        <button class="btn btn-danger" onclick="deleteRow('${key}', ${index})">删除</button>
+                    </div>
+                </td>
+            </tr>
+        `).join("");
+
+        box.innerHTML = `
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>${head}</tr>
+                    </thead>
+                    <tbody>${body}</tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    function renderCell(value, key) {
+        if (key.toLowerCase().includes("password")) {
+            return "******";
+        }
+
+        if (["启用", "可用", "已完成", "学习中", "进行中", "Available"].includes(value)) {
+            return `<span class="tag tag-success">${escapeHtml(value)}</span>`;
+        }
+
+        if (["禁用", "维修中", "暂停", "取消", "Under Maintenance"].includes(value)) {
+            return `<span class="tag tag-danger">${escapeHtml(value)}</span>`;
+        }
+
+        if (["使用中", "未开始", "In Use"].includes(value)) {
+            return `<span class="tag tag-warning">${escapeHtml(value)}</span>`;
+        }
+
+        return escapeHtml(value);
+    }
+
+    async function loadRelationOptions(moduleKey) {
+        if (state.relationCache[moduleKey]) {
+            return state.relationCache[moduleKey];
+        }
+
+        const list = unwrap(await request(modules[moduleKey].baseUrl));
+        state.relationCache[moduleKey] = Array.isArray(list) ? list : [];
+
+        return state.relationCache[moduleKey];
+    }
+
+    async function openModal(key, rowIndex = null) {
+        const m = modules[key];
+        const row = rowIndex === null ? null : state.rows[key][rowIndex];
+
+        state.editingModule = key;
+        state.editingId = row ? row[m.idKey] : null;
+
+        document.getElementById("modalTitle").textContent = row ? `修改${m.label}` : `新增${m.label}`;
+
+        const form = document.getElementById("editForm");
+        form.innerHTML = `<div class="empty"><span class="loading"></span>正在加载表单...</div>`;
+
+        document.getElementById("modalMask").classList.add("show");
+
+        const htmlParts = [];
+
+        for (const f of m.fields) {
+            htmlParts.push(await renderFormItem(f, row));
+        }
+
+        form.innerHTML = htmlParts.join("");
+    }
+
+    async function renderFormItem(f, row) {
+        const value = row ? getValue(row, f.key) : "";
+        const label = `${f.label}${f.required ? '<span class="required"> *</span>' : ''}`;
+
+        if (f.type === "select") {
+            const options = ["", ...(f.options || [])].map(opt => {
+                const selected = String(value ?? "") === String(opt) ? "selected" : "";
+                return `<option value="${escapeHtml(opt)}" ${selected}>${opt ? escapeHtml(opt) : "请选择"}</option>`;
+            }).join("");
+
+            return `
+                <div class="form-item">
+                    <label>${label}</label>
+                    <select id="form_${f.key}">${options}</select>
+                </div>
+            `;
+        }
+
+        if (f.type === "textarea") {
+            return `
+                <div class="form-item full">
+                    <label>${label}</label>
+                    <textarea id="form_${f.key}" rows="3" placeholder="${escapeHtml(f.placeholder || '')}">${escapeHtml(value)}</textarea>
+                </div>
+            `;
+        }
+
+        if (f.type === "relation") {
+            let list = [];
+
+            try {
+                list = await loadRelationOptions(f.relation);
+            } catch (_) {}
+
+            const currentId = row && row[f.key] ? row[f.key].id : "";
+
+            const options = [`<option value="">请选择</option>`].concat(list.map(item => {
+                const selected = String(currentId) === String(item.id) ? "selected" : "";
+                const text = item[f.display] || item.name || item.username || item.id;
+                return `<option value="${item.id}" ${selected}>${escapeHtml(text)}</option>`;
+            })).join("");
+
+            return `
+                <div class="form-item">
+                    <label>${label}</label>
+                    <select id="form_${f.key}" data-relation="${f.relation}">${options}</select>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="form-item">
+                <label>${label}</label>
+                <input id="form_${f.key}" type="${f.type || 'text'}" step="${f.step || ''}" value="${escapeHtml(value)}" placeholder="${escapeHtml(f.placeholder || '')}">
+            </div>
+        `;
+    }
+
+    function closeModal() {
+        document.getElementById("modalMask").classList.remove("show");
+
+        state.editingModule = null;
+        state.editingId = null;
+    }
+
+    function collectFormPayload(key) {
+        const m = modules[key];
+        const payload = {};
+
+        for (const f of m.fields) {
+            const el = document.getElementById(`form_${f.key}`);
+            let value = el ? el.value.trim() : "";
+
+            if (f.required && !value) {
+                throw new Error(`请填写${f.label}`);
+            }
+
+            if (value === "") {
+                continue;
+            }
+
+            if (f.type === "number") {
+                value = Number(value);
+            }
+
+            if (f.type === "relation") {
+                payload[f.key] = { id: Number(value) };
+            } else {
+                payload[f.key] = value;
+            }
+        }
+
+        return payload;
+    }
+
+    async function submitForm() {
+        const key = state.editingModule;
+
+        if (!key) {
+            return;
+        }
+
+        const m = modules[key];
+
+        try {
+            const payload = collectFormPayload(key);
+
+            const isEdit = state.editingId !== null && state.editingId !== undefined;
+            const url = isEdit ? `${m.baseUrl}/${state.editingId}` : m.baseUrl;
+            const method = isEdit ? "PUT" : "POST";
+
+            const json = await request(url, {
+                method,
+                body: JSON.stringify(payload)
+            });
+
+            showAlert(resultMessage(json, isEdit ? "修改成功" : "新增成功"), "success");
+
+            closeModal();
+            state.relationCache = {};
+
+            await loadList(key);
+
+            if (state.current === "dashboard") {
+                await loadDashboardData();
+            }
+        } catch (e) {
+            showAlert("保存失败：" + e.message, "error");
+        }
+    }
+
+    async function deleteRow(key, rowIndex) {
+        const m = modules[key];
+        const row = state.rows[key][rowIndex];
+        const id = row[m.idKey];
+
+        if (!id) {
+            showAlert("删除失败：未找到记录ID", "error");
+            return;
+        }
+
+        const name = getValue(row, "name") ||
+            getValue(row, "username") ||
+            getValue(row, "plateNumber") ||
+            getValue(row, "recordId") ||
+            id;
+
+        if (!confirm(`确定要删除“${name}”这条记录吗？`)) {
+            return;
+        }
+
+        try {
+            const json = await request(`${m.baseUrl}/${id}`, {
+                method: "DELETE"
+            });
+
+            showAlert(resultMessage(json, "删除成功"), "success");
+
+            state.relationCache = {};
+            await loadList(key);
+        } catch (e) {
+            showAlert("删除失败：" + e.message, "error");
+        }
+    }
+
+    window.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+            closeModal();
+        }
+    });
+
+    initNav();
+    switchPage("dashboard");
+</script>
+</body>
+</html>
